@@ -1,9 +1,31 @@
-# Learn more about services, parameters and containers at
-# http://symfony.com/doc/current/book/service_container.html
-parameters:
-#    parameter_name: value
 
 services:
-#    service_name:
-#        class: AppBundle\Directory\ClassName
-#        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+    app.user_repository:
+        class: AppBundle\Repository\UserRepository
+        factory: ["@doctrine", getRepository]
+        arguments: 
+            - AppBundle\Entity\User
+            
+            
+    app.user_service:
+        class: AppBundle\Service\UserService
+        arguments: ['@doctrine.orm.entity_manager']
+        
+    logging_pointcut:
+        class: AppBundle\PointCut\LoggingPointCut
+        tags:
+            - { name: jms_aop.pointcut, interceptor: logging_interceptor }        
+            
+    logging_interceptor:
+        class: AppBundle\Interceptor\LoggingInterceptor
+        arguments: ['@logger']             
+
+    transactional_pointcut:
+        class: AppBundle\PointCut\TransactionalPointCut
+        arguments: ['@annotation_reader'] 
+        tags:
+            - { name: jms_aop.pointcut, interceptor: transactional_interceptor } 
+            
+    transactional_interceptor:
+        class: AppBundle\Interceptor\TransactionalInterceptor
+        arguments: ['@doctrine.orm.entity_manager']              
